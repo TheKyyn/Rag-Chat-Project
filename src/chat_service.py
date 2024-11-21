@@ -1,6 +1,6 @@
 from typing import Dict
-from .llm_service import LLMService
-from .rag_service import RAGService
+from src.llm_service import LLMService
+from src.rag_service import RAGService
 
 class ChatService:
     def __init__(self):

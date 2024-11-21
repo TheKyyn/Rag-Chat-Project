@@ -4,7 +4,8 @@ from langchain.chains import RetrievalQA
 from langchain.llms import Ollama
 from langchain.schema import Document
 from typing import List, Optional
-from .config import Config
+from src.document_loader import DocumentLoader
+from src.config import Config
 import uuid
 
 class RAGService:
