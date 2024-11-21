@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Chat Comparaison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .response-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .response-box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+        .temperature-control {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>RAG Chat Comparaison</h1>
+    
+    <div class="controls">
+        <div class="temperature-control">
+            <label for="temperature">Température:</label>
+            <input type="range" id="temperature" min="0" max="1" step="0.1" value="0.7">
+            <span id="temperature-value">0.7</span>
+        </div>
+        
+        <textarea id="query" placeholder="Entrez votre question ici..."></textarea>
+        <button onclick="sendQuery()">Envoyer</button>
+    </div>
+
+    <div class="response-container">
+        <div class="response-box">
+            <h3>Réponse Standard</h3>
+            <pre id="standard-response"></pre>
+        </div>
+        <div class="response-box">
+            <h3>Réponse RAG</h3>
+            <pre id="rag-response"></pre>
+        </div>
+    </div>
+
+    <script>
+        const temperatureSlider = document.getElementById('temperature');
+        const temperatureValue = document.getElementById('temperature-value');
+        
+        temperatureSlider.addEventListener('input', (e) => {
+            temperatureValue.textContent = e.target.value;
+        });
+
+        async function sendQuery() {
+            const query = document.getElementById('query').value;
+            const temperature = parseFloat(temperatureSlider.value);
+            
+            try {
+                const response = await fetch('http://localhost:8000/chat/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        temperature: temperature
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('standard-response').textContent = data.standard;
+                document.getElementById('rag-response').textContent = data.rag;
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue lors de la requête');
+            }
+        }
+    </script>
+</body>
+</html> 
