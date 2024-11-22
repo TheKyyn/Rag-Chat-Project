@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  streamlit:
+    build:
+      context: .
+      dockerfile: docker/streamlit/Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./volumes/documents:/app/documents
+      - ./.env:/app/.env
+    depends_on:
+      - ollama
+      - chromadb
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - CHROMADB_HOST=chromadb
+    networks:
+      - rag_network
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./volumes/ollama:/root/.ollama
+    networks:
+      - rag_network
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./volumes/chromadb:/chroma/data
+    networks:
+      - rag_network
+
+networks:
+  rag_network:
+    driver: bridge
+
+volumes:
+  documents:
+  chromadb_data:
+  ollama_data: 
