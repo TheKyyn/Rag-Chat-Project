@@ -62,6 +62,11 @@ with st.sidebar:
     - 📚 **Mode RAG**: Combine le LLM avec une base de connaissances
     """)
 
+    if st.button("🔄 Rafraîchir les documents"):
+        with st.spinner("Chargement des documents..."):
+            st.session_state.chat_service.rag_service.initialize_vector_store()
+        st.success("Documents mis à jour !")
+
 col1, col2 = st.columns(2)
 
 with col1:
@@ -88,11 +93,14 @@ if st.button("Envoyer", key="send_button"):
             
             with rag_container:
                 st.markdown("**Question:** " + query)
-                st.markdown(f"**Réponse:** {responses['rag']}")
-                if 'sources' in responses:
-                    st.markdown("**Sources utilisées:**")
-                    for source in responses['sources']:
-                        st.markdown(f"- {source}", help=source)
+                if isinstance(responses['rag'], dict):
+                    st.markdown(f"**Réponse:** {responses['rag']['response']}")
+                    if responses['rag'].get('sources'):
+                        st.markdown("**Sources utilisées:**")
+                        for source in responses['rag']['sources']:
+                            st.info(f"📄 {source}")
+                else:
+                    st.markdown(f"**Réponse:** {responses['rag']}")
                 st.divider()
             
             st.session_state.messages.append({
