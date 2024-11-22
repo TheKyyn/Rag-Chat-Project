@@ -12,5 +12,6 @@ class Config:
     AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
     
     VECTOR_STORE_PATH = "vectorstore"
-    CHUNK_SIZE = 500
-    CHUNK_OVERLAP = 50
+    CHUNK_SIZE = 1000
+    CHUNK_OVERLAP = 200
+    GOOGLE_DRIVE_FOLDER_ID = os.getenv('GOOGLE_DRIVE_FOLDER_ID')

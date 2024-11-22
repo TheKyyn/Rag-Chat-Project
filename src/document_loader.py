@@ -1,26 +1,32 @@
-import os
 from typing import List
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from src.cloud_storage import get_storage_client
+from src.google_drive_service import GoogleDriveService
 from src.config import Config
 
 class DocumentLoader:
     def __init__(self):
-        self.storage_client = get_storage_client()
+        self.drive_service = GoogleDriveService()
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=Config.CHUNK_SIZE,
             chunk_overlap=Config.CHUNK_OVERLAP
         )
 
-    def download_and_prepare_documents(self, cloud_prefix: str = "") -> List[Document]:
-        return [
-            Document(
-                page_content="Python est un langage de programmation interprété, multi-paradigme et multiplateformes.",
-                metadata={"source": "python_info.txt"}
-            ),
-            Document(
-                page_content="JavaScript est un langage de programmation de scripts principalement employé dans les pages web.",
-                metadata={"source": "javascript_info.txt"}
-            )
-        ] 
+    def download_and_prepare_documents(self) -> List[Document]:
+        try:
+            documents = self.drive_service.get_documents()
+            
+            split_documents = []
+            for doc in documents:
+                splits = self.text_splitter.split_text(doc.page_content)
+                split_documents.extend([
+                    Document(
+                        page_content=split,
+                        metadata=doc.metadata
+                    ) for split in splits
+                ])
+            
+            return split_documents
+        except Exception as e:
+            print(f"Erreur lors du chargement des documents: {str(e)}")
+            return [] 
