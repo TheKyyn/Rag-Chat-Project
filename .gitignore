@@ -30,3 +30,10 @@ ENV/
 *.swo
 
 vectorstore/
+credentials.json
+token.pickle
+*.txt
+.env
+vectorstore/
+__pycache__/
+
