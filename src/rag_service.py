@@ -21,25 +21,21 @@ class RAGService:
         )
         self.vector_store = None
         self.qa_chain = None
+        self.document_loader = DocumentLoader()
 
-    def initialize_vector_store(self, documents: List[Document] = None) -> None:
-        """Initialise ou met à jour le vector store avec les documents"""
-        if documents is None:
-            documents = [
-                Document(
-                    page_content="Python est un langage de programmation interprété, multi-paradigme et multiplateformes. Il favorise la programmation impérative structurée, fonctionnelle et orientée objet.",
-                    metadata={"source": "python_info.txt", "id": str(uuid.uuid4())}
-                ),
-                Document(
-                    page_content="JavaScript est un langage de programmation de scripts principalement employé dans les pages web interactives. C'est un langage orienté objet à prototype.",
-                    metadata={"source": "javascript_info.txt", "id": str(uuid.uuid4())}
-                )
-            ]
-
+    def initialize_vector_store(self) -> None:
+        """Initialise le vector store avec les documents de Google Drive"""
         try:
+            documents = self.document_loader.download_and_prepare_documents()
+            
+            if not documents:
+                print("Aucun document trouvé dans Google Drive")
+                return
+
+            ids = [str(uuid.uuid4()) for _ in documents]
+            
             texts = [doc.page_content for doc in documents]
             metadatas = [doc.metadata for doc in documents]
-            ids = [str(uuid.uuid4()) for _ in documents]
 
             self.vector_store = Chroma.from_texts(
                 texts=texts,
@@ -56,22 +52,41 @@ class RAGService:
                     search_kwargs={"k": 3}
                 )
             )
+            
+            print(f"Vector store initialisé avec {len(documents)} documents")
+            
         except Exception as e:
             print(f"Erreur lors de l'initialisation du vector store: {str(e)}")
             self.vector_store = None
             self.qa_chain = None
 
-    def get_response(self, query: str) -> str:
+    def get_response(self, query: str) -> dict:
         """Obtient une réponse en utilisant RAG"""
         if not self.qa_chain:
-            return "Le service RAG n'est pas correctement initialisé. Utilisation du LLM standard."
+            return {
+                "response": "Le service RAG n'est pas correctement initialisé.",
+                "sources": []
+            }
         
         try:
             result = self.qa_chain.invoke({"query": query})
-            return result["result"]
+            
+            if self.vector_store:
+                relevant_docs = self.vector_store.similarity_search(query, k=2)
+                sources = [doc.metadata.get('source', 'Unknown') for doc in relevant_docs]
+            else:
+                sources = []
+            
+            return {
+                "response": result["result"],
+                "sources": sources
+            }
         except Exception as e:
             print(f"Erreur lors de la génération de la réponse RAG: {str(e)}")
-            return "Désolé, une erreur s'est produite lors de la génération de la réponse."
+            return {
+                "response": "Désolé, une erreur s'est produite.",
+                "sources": []
+            }
 
     def update_parameters(self, temperature: Optional[float] = None) -> None:
         """Met à jour les paramètres du LLM"""
